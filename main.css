@@ -1,0 +1,83 @@
+
+#navbar{
+    height: 50px;
+    margin: auto;
+    width: 90%;
+    color: gray;
+    background-color: cyan;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+}
+#navbar button{
+    height: 50px;
+    color:darkmagenta;
+    text-decoration: none;
+    border: none;
+    border-left: 2px solid rgb(0, 187, 187);
+    border-right: 2px solid rgb(0, 187, 187);
+    background-color: rgba(0, 0, 0, 0);
+}
+
+#navbar button:hover{
+    background-color: rgb(1, 150, 150);
+}
+
+canvas{
+    border: 2px solid black;
+    background-color: white;
+    display: block;
+    margin: 30px auto;
+    position: relative;
+}
+
+.ejercicio{
+    background-color: cyan;
+    width: 90%;
+    margin: auto;
+    margin-top: 10px;
+    border-radius: 10px;
+}
+
+.container{
+    overflow: hidden;
+    height: 550px;
+    width: 90%;
+    background-color: cyan;
+    margin: auto;
+    margin-top: 20px;
+    border-radius:10px;
+}
+
+.hidden{
+    display: none;
+}
+
+.slidecontainer label{
+    vertical-align: 30%;
+}
+
+.slidecontainer{
+    display: block;
+    width: auto;
+}
+
+.flexbox{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+}
+
+h4{
+    width: fit-content;
+    margin: 0 auto;
+}
+
+@media only screen and (max-width:480px){
+    .flexbox{
+        flex-direction: column;
+    }
+}
