@@ -26,31 +26,10 @@ document.addEventListener("wheel", event=>{
 document.addEventListener("dblclick", event=>{
     event.preventDefault();
     //accion doble click
+    console.log("2click");
     console.log(event);
 })
 
-
-let isMouseClicked = false;
-document.querySelector("#js-canvas").addEventListener("mousedown", event=>{
-    isMouseClicked = event.button == 0;
-    console.log(isMouseClicked);
-})
-
-document.querySelector("#js-canvas").addEventListener("mouseup", event=>{
-    if(event.button == 0){
-        isMouseClicked = false;
-        console.log(isMouseClicked);
-    }
-})
-
-//click and drag
-document.querySelector("#js-canvas").addEventListener("mousemove", event=>{
-    if(isMouseClicked){
-        //accion de drageo
-        console.log("movX: " + event.movementX +  "; movY: " + event.movementY);
-    }
-    //console.log(event);
-})
 
 //fin eventos
 //inicio dibujado
@@ -71,12 +50,13 @@ class Punto{
     constructor(x, y, poligono){
         this.y  = y;
         this.x = x;
+        this.poligono = poligono;
     }
     move(yMovement, xMovement, recalcular){
         this.y += yMovement;
         this.x += xMovement;
         if(recalcular){
-            poligono.calcularCentro();
+            this.poligono.calcularCentro();
         }
     }
 
@@ -97,7 +77,7 @@ class PuntoCentral{
     }
     
     move(yMovement, xMovement){
-        poligono.getAllPuntos().foreach(punto=>{
+        this.poligono.getAllPuntos().forEach(punto=>{
             punto.move(yMovement, xMovement, false);
         })
         this.y += yMovement;
@@ -132,8 +112,8 @@ class Poligono{
         if(this.esDentroPunto(this.puntoCentral, x, y)){
             return this.puntoCentral;
         }
-        for(let xi; xi < this.puntos.length; xi++){
-            if(this.esDentroPunto(puntos[xi], x, y)){
+        for(let xi = 0; xi < this.puntos.length; xi++){
+            if(this.esDentroPunto(this.puntos[xi], x, y)){
                 return this.puntos[xi];
             }
         }
@@ -158,7 +138,7 @@ class Poligono{
         let calculoX = Math.pow((x - punto.getX()), 2);
         let calculoY = Math.pow((y - punto.getY()), 2);
         let distanciaCalculo = Math.cbrt(calculoX + calculoY);
-        return distanciaCalculo <= this.radioPuntos;
+        return distanciaCalculo <= (this.radioPuntos/2);
     }
 
     calcularCentro(){
@@ -166,11 +146,11 @@ class Poligono{
         let x = 0;
         let y = 0;
         this.puntos.forEach(punto=>{
-            x += punto.getX;
-            y += punto.getY;
+            x += punto.getX();
+            y += punto.getY();
             puntos++;
         })
-        this.puntoCentral = new PuntoCentral(Math.floor(x/puntos), Math.floor(y/puntos));
+        this.puntoCentral = new PuntoCentral(Math.floor(x/puntos), Math.floor(y/puntos), this);
     }
 
     getAllPuntos(){
@@ -192,10 +172,13 @@ class Poligono{
     getColorLinea(){
         return this.colorLinea;
     }
+    getPuntoCentro(){
+        return this.puntoCentral;
+    }
 }
 
 
-//
+// parametros de poligonos
 let radioCirculo = 10;
 let radioCentro = 7;
 let colorCirculo ={ r: 255,
@@ -207,6 +190,9 @@ let colorCentro ={  r: 0,
 let colorLinea ={   r: 255,
                     g: 255,
                     b: 0};
+let colorFondo ={   r:255,
+                    g:255,
+                    b:255};
 let poligonos = new Array();
 let poligonoSeleccionado = new Poligono(radioCirculo, radioCentro, colorCirculo, colorCentro, colorLinea);
 poligonos.push({    poligono: poligonoSeleccionado,
@@ -216,17 +202,57 @@ poligonos.push({    poligono: poligonoSeleccionado,
 
 //eventos
 
-let lastClick = null;
 document.querySelector("#js-canvas").addEventListener("click", event=>{
     console.log("Y: " + event.layerY);
     console.log("X: " + event.layerX);
-    if(lastClick == null || (event.timeStamp - lastClick.timeStamp) > 200){
-        poligonoSeleccionado.addPunto(event.layerX, event.layerY);
-        lastClick = event;
-        draw(poligonoSeleccionado);
+    if(selectedPunto){
+        selectedPunto = null;
+        return;
     }
-    //accion click
+    console.log(selectedPunto);
+    poligonoSeleccionado.addPunto(event.layerX, event.layerY);
+    poligonoSeleccionado.calcularCentro();
+    lastClick = event;
+    draw(poligonoSeleccionado);
 })
+//arrastre
+let selectedPunto = null;
+let isMouseClicked = false;
+document.querySelector("#js-canvas").addEventListener("mousedown", event=>{
+    for(let xi = 0; xi < poligonos.length; xi++){
+        if(poligonos[xi].estaTerminado){
+            let punto = poligonos[xi].poligono.getPunto(event.layerX, event.layerY);
+            if(punto != null){
+                selectedPunto = punto;
+                console.log(selectedPunto);
+            }
+        }
+    }
+    isMouseClicked = event.button == 0;
+    console.log(isMouseClicked);
+})
+
+document.querySelector("#js-canvas").addEventListener("mouseup", event=>{
+    if(event.button == 0){
+        isMouseClicked = false;
+        console.log(isMouseClicked);
+    }
+})
+
+//click and drag
+document.querySelector("#js-canvas").addEventListener("mousemove", event=>{
+    console.log(isMouseClicked);
+    if(isMouseClicked && selectedPunto != null){
+        //accion de drageo
+        selectedPunto.move(event.movementY, event.movementX, true);
+        limpiar(width, height, colorFondo);
+        poligonos.forEach(poligono=>{
+            draw(poligono.poligono, poligono.estaTerminado);
+        })
+    }
+    //console.log(event);
+})
+
 
 
 function draw(poligono, estaTerminado){
@@ -241,14 +267,12 @@ function draw(poligono, estaTerminado){
     let puntos = poligono.getAllPuntos();
     for(xi = 0; xi < puntos.length; xi++){
         let punto = puntos[xi];
+
         if(xi == 0){
             puntoInicial = punto;
         }
-        context.beginPath();
-        console.log(punto);
-        context.arc(punto.getX(), punto.getY(), poligono.getRadioPuntos(), 0, Math.PI*2);
-        context.fill()
-        context.closePath();
+
+        drawCircle(punto, poligono.getRadioPuntos());
 
         if(puntoAnterior){
             drawLine(puntoAnterior, punto);
@@ -256,6 +280,9 @@ function draw(poligono, estaTerminado){
 
         if(xi == puntos.length - 1 && estaTerminado){
             drawLine(punto, puntoInicial);
+            colorCentro = poligono.getColorCentro();
+            context.fillStyle = "rgb(" + colorCentro.r + ", " + colorCentro.g + ", " + colorCentro.b + ")";
+            drawCircle(poligono.getPuntoCentro(), poligono.getRadioCentro());
         }
 
         puntoAnterior = punto;
@@ -268,23 +295,21 @@ function draw(poligono, estaTerminado){
         context.stroke();
         context.closePath();
     }
-    /*poligono.getAllPuntos().forEach(punto=>{
+
+    function drawCircle(punto, radio){
         context.beginPath();
-        console.log(punto);
-        context.arc(punto.getX(), punto.getY(), poligono.getRadioPuntos(), 0, Math.PI*2);
+        context.arc(punto.getX(), punto.getY(), radio, 0, Math.PI*2);
         context.fill()
         context.closePath();
+    }
+}
 
-        if(puntoAnterior){
-            context.beginPath();
-            context.moveTo(puntoAnterior.getX(), puntoAnterior.getY());
-            context.lineTo(punto.getX(), punto.getY());
-            context.stroke();
-            context.closePath();
-        }
-
-        puntoAnterior = punto;
-    })*/
+function limpiar(ancho, alto, colorFondo){
+    context.beginPath();
+    context.fillStyle = "rgb(" + colorFondo.r + ", " + colorFondo.g + ", " + colorFondo.b + ")";
+    context.rect(0, 0, ancho, alto);
+    context.fill();
+    context.closePath();
 }
 
 document.querySelector("#js-terminarPoligono").addEventListener("click", ()=>{
@@ -297,6 +322,12 @@ document.querySelector("#js-terminarPoligono").addEventListener("click", ()=>{
     });
     console.log(poligonos);
 })
+
+document.querySelector("#js-ocultarPoligono").addEventListener("click", ()=>{
+    limpiar(width, height, colorFondo);
+})
+
+
 /*function draw(poligono){
     arco(poligono.getAllPuntos()[0].getX(), poligono.getAllPuntos()[0].getY(), poligono.getRadioPuntos(), 0, 2, poligono.getColorPuntos());
 }
