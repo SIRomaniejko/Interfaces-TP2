@@ -26,18 +26,6 @@ document.addEventListener("wheel", event=>{
 
 
 
-//fin eventos
-//inicio dibujado
-function arco(x, y, radio, inicio, fin, colorCirculo){
-    console.log("dibujo circulo");
-    console.log(x);
-    console.log(y);
-    context.arc(x, y, radio, Math.PI*inicio, Math.PI*fin);
-    context.lineCap = 'butt';
-    context.fillStyle = "rgb(" + colorCirculo.r + ", " + colorCirculo.g + ", " + colorCirculo.b + ")";
-    context.fill();
-    context.closePath();
-}
 
 //clases
 
@@ -119,17 +107,16 @@ class Poligono{
     }
 
     deletePunto(x, y){
-        console.log(this.puntos);
         if(this.esDentroPunto(this.puntoCentral, x, y)){
             return 2;
         }
         for(let xi = 0; xi < this.puntos.length; xi++){
             if(this.esDentroPunto(this.puntos[xi], x, y)){
-                if(xi != 0){
-                    this.puntos.splice(xi,1);
+                if(this.puntos.length == 1){
+                    return 2;
                 }
                 else{
-                    this.puntos.shift();
+                    this.puntos.splice(xi,1);
                 }
                 this.calcularCentro();
                 return 1;
@@ -207,13 +194,11 @@ poligonos.push({    poligono: poligonoSeleccionado,
 
 //eventos
 document.querySelector("#js-canvas").addEventListener("click", event=>{
-    console.log("Y: " + event.layerY);
-    console.log("X: " + event.layerX);
+    console.log("Y: " + event.layerY + "; X: " +  event.layerX);
     if(selectedPunto){
         selectedPunto = null;
         return;
     }
-    console.log(selectedPunto);
     poligonoSeleccionado.addPunto(event.layerX, event.layerY);
     poligonoSeleccionado.calcularCentro();
     lastClick = event;
@@ -228,18 +213,15 @@ document.querySelector("#js-canvas").addEventListener("mousedown", event=>{
             let punto = poligonos[xi].poligono.getPunto(event.layerX, event.layerY);
             if(punto != null){
                 selectedPunto = punto;
-                console.log(selectedPunto);
             }
         }
     }
     isMouseClicked = event.button == 0;
-    console.log(isMouseClicked);
 })
 
 document.querySelector("#js-canvas").addEventListener("mouseup", event=>{
     if(event.button == 0){
         isMouseClicked = false;
-        console.log(isMouseClicked);
     }
 })
 
@@ -254,7 +236,6 @@ document.querySelector("#js-canvas").addEventListener("mousemove", event=>{
             refresh();
         })
     }
-    //console.log(event);
 })
 
 document.addEventListener("dblclick", event=>{
@@ -265,14 +246,8 @@ document.addEventListener("dblclick", event=>{
                 poligonos.splice(xi, 1);
             }
             refresh();
-            console.log(response);
         }
     }
-    
-    console.log("2click");
-    console.log(selectedPunto);
-    //accion doble click
-    console.log(event);
 })
 
 function refresh(){
@@ -340,7 +315,6 @@ function limpiar(ancho, alto, colorFondo){
 }
 
 document.querySelector("#js-terminarPoligono").addEventListener("click", ()=>{
-    console.log("termina2");
     if(poligonoSeleccionado.isEmpty()){
         alert("tenes que crear almenos un punto");
         return;
@@ -351,7 +325,6 @@ document.querySelector("#js-terminarPoligono").addEventListener("click", ()=>{
     poligonos.push({    poligono: poligonoSeleccionado,
                         estaTerminado: false   
     });
-    console.log(poligonos);
 })
 
 
