@@ -23,12 +23,7 @@ document.addEventListener("wheel", event=>{
     }
 })
 
-document.addEventListener("dblclick", event=>{
-    event.preventDefault();
-    //accion doble click
-    console.log("2click");
-    console.log(event);
-})
+
 
 
 //fin eventos
@@ -104,6 +99,9 @@ class Poligono{
         this.puntoCentral = null;
     }
     
+    isEmpty(){
+        return this.puntos.length == 0;
+    }
     addPunto(x, y){
         this.puntos.push(new Punto(x, y, this));
     }
@@ -121,16 +119,23 @@ class Poligono{
     }
 
     deletePunto(x, y){
+        console.log(this.puntos);
         if(this.esDentroPunto(this.puntoCentral, x, y)){
             return 2;
         }
-        for(let xi; xi < this.puntos.length; xi++){
-            if(this.esDentroPunto(puntos[xi], x, y)){
-                this.puntos.splice(xi,xi);
+        for(let xi = 0; xi < this.puntos.length; xi++){
+            if(this.esDentroPunto(this.puntos[xi], x, y)){
+                if(xi != 0){
+                    this.puntos.splice(xi,1);
+                }
+                else{
+                    this.puntos.shift();
+                }
                 this.calcularCentro();
                 return 1;
             }
         }
+        
         return 0;
     }
 
@@ -201,7 +206,6 @@ poligonos.push({    poligono: poligonoSeleccionado,
 
 
 //eventos
-
 document.querySelector("#js-canvas").addEventListener("click", event=>{
     console.log("Y: " + event.layerY);
     console.log("X: " + event.layerX);
@@ -239,21 +243,44 @@ document.querySelector("#js-canvas").addEventListener("mouseup", event=>{
     }
 })
 
+
 //click and drag
 document.querySelector("#js-canvas").addEventListener("mousemove", event=>{
-    console.log(isMouseClicked);
     if(isMouseClicked && selectedPunto != null){
         //accion de drageo
         selectedPunto.move(event.movementY, event.movementX, true);
         limpiar(width, height, colorFondo);
         poligonos.forEach(poligono=>{
-            draw(poligono.poligono, poligono.estaTerminado);
+            refresh();
         })
     }
     //console.log(event);
 })
 
+document.addEventListener("dblclick", event=>{
+    for(let xi = 0; xi < poligonos.length; xi++){
+        if(poligonos[xi].estaTerminado){
+            let response = poligonos[xi].poligono.deletePunto(event.layerX, event.layerY);
+            if(response == 2){
+                poligonos.splice(xi, 1);
+            }
+            refresh();
+            console.log(response);
+        }
+    }
+    
+    console.log("2click");
+    console.log(selectedPunto);
+    //accion doble click
+    console.log(event);
+})
 
+function refresh(){
+    limpiar(width, height, colorFondo);
+    poligonos.forEach(poligono=>{
+        draw(poligono.poligono, poligono.estaTerminado);
+    })
+}
 
 function draw(poligono, estaTerminado){
     let colorPunto = poligono.getColorPuntos();
@@ -314,6 +341,10 @@ function limpiar(ancho, alto, colorFondo){
 
 document.querySelector("#js-terminarPoligono").addEventListener("click", ()=>{
     console.log("termina2");
+    if(poligonoSeleccionado.isEmpty()){
+        alert("tenes que crear almenos un punto");
+        return;
+    }
     draw(poligonoSeleccionado, true);
     poligonoSeleccionado = new Poligono(radioCirculo, radioCentro, colorCirculo, colorCentro, colorLinea);
     poligonos[poligonos.length-1].estaTerminado = true;
