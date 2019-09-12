@@ -354,10 +354,6 @@ document.querySelector("#js-terminarPoligono").addEventListener("click", ()=>{
     console.log(poligonos);
 })
 
-document.querySelector("#js-ocultarPoligono").addEventListener("click", ()=>{
-    limpiar(width, height, colorFondo);
-})
-
 
 /*function draw(poligono){
     arco(poligono.getAllPuntos()[0].getX(), poligono.getAllPuntos()[0].getY(), poligono.getRadioPuntos(), 0, 2, poligono.getColorPuntos());
