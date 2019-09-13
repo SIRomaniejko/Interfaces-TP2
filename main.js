@@ -5,25 +5,6 @@ let height = document.querySelector("#js-canvas").getAttribute("height").replace
 
 
 
-let isCPressed = false;
-document.addEventListener("keydown", event=>{
-    isCPressed = event.code == "KeyC";
-})
-
-document.addEventListener("keyup", event=>{
-    if(event.code == "KeyC"){
-        isCPressed = false;
-    }
-})
-
-document.addEventListener("wheel", event=>{
-    if(isCPressed){
-        //accion C + WHEEL
-        console.log(event.deltaY);
-    }
-})
-
-
 
 
 
@@ -34,8 +15,10 @@ class Punto{
         this.y  = y;
         this.x = x;
         this.poligono = poligono;
+        
     }
     move(yMovement, xMovement, recalcular){
+        //cuando se mueve si recibe recalcular en los parametros le avisa a el poligono que hay que mover el punto central
         this.y += yMovement;
         this.x += xMovement;
         if(recalcular){
@@ -60,6 +43,7 @@ class PuntoCentral{
     }
     
     move(yMovement, xMovement){
+        //cuando se mueve el punto central mueve el resto de los puntos que pertenescan a el mismo poligono
         this.poligono.getAllPuntos().forEach(punto=>{
             punto.move(yMovement, xMovement, false);
         })
@@ -83,6 +67,7 @@ class Poligono{
         this.colorPunto = colorPunto;
         this.colorCentro = colorCentro;
         this.colorLinea = colorLinea;
+        this.saturacion = 0; //porcentaje de saturacion, 100 es blanco, -100 es negro, 0 es color regular
         this.puntos = new Array();
         this.puntoCentral = null;
     }
@@ -90,11 +75,13 @@ class Poligono{
     isEmpty(){
         return this.puntos.length == 0;
     }
+
     addPunto(x, y){
         this.puntos.push(new Punto(x, y, this));
     }
 
     getPunto(x, y){
+        //pregunta si x;y esta dentro de algun punto, si es asi lo devuelve
         if(this.esDentroPunto(this.puntoCentral, x, y)){
             return this.puntoCentral;
         }
@@ -127,6 +114,7 @@ class Poligono{
     }
 
     esDentroPunto(punto, x, y){
+        //funcion para saber si un x;y se encuentra en el area de un punto
         let calculoX = Math.pow((x - punto.getX()), 2);
         let calculoY = Math.pow((y - punto.getY()), 2);
         let distanciaCalculo = Math.cbrt(calculoX + calculoY);
@@ -134,6 +122,7 @@ class Poligono{
     }
 
     calcularCentro(){
+        //funcion que crea un nuevo punto central
         let puntos = 0;
         let x = 0;
         let y = 0;
@@ -156,13 +145,41 @@ class Poligono{
         return this.radioCentro;
     }
     getColorPuntos(){
-        return this.colorPunto;
+        return this.getColorSaturado(this.colorPunto);
     }
     getColorCentro(){
-        return this.colorCentro;
+        return this.getColorSaturado(this.colorCentro);
     }
     getColorLinea(){
-        return this.colorLinea;
+        return this.getColorSaturado(this.colorLinea);
+    }
+    getColorSaturado(color){
+        //calcula el color dependiendo de la saturacion
+        let colorSaturado = {}; 
+        if(this.saturacion == 0){
+            return color;
+        }
+        else if(this.saturacion > 0){
+            colorSaturado.r = ((this.saturacion * (255 - color.r)) / 100) + color.r;
+            colorSaturado.g = ((this.saturacion * (255 - color.g)) / 100) + color.g;
+            colorSaturado.b = ((this.saturacion * (255 - color.b)) / 100) + color.b;
+        }
+        else{
+            colorSaturado.r = -this.saturacion * (-color.r) / 100 + color.r;
+            colorSaturado.g = -this.saturacion * (-color.g) / 100 + color.g;
+            colorSaturado.b = -this.saturacion * (-color.b) / 100 + color.b;
+        }
+        return colorSaturado;
+    }
+
+    changeSaturacion(saturar){
+        //recibe un parametro y modifica la saturacion de acuerdo a si es positivo o negativo
+        if(saturar > 0 && this.saturacion < 100){
+            this.saturacion += 10;
+        }
+        else if(saturar < 0 && this.saturacion > -100){
+            this.saturacion -= 10;
+        }
     }
     getPuntoCentro(){
         return this.puntoCentral;
@@ -170,65 +187,73 @@ class Poligono{
 }
 
 
-// parametros de poligonos
+// parametros de creacion poligonos
 let radioCirculo = 10;
 let radioCentro = 7;
+
 let colorCirculo ={ r: 255,
                     g: 0,
                     b: 0};
+
 let colorCentro ={  r: 0,
                     g: 255,
                     b: 0};
+
 let colorLinea ={   r: 255,
                     g: 255,
                     b: 0};
+
 let colorFondo ={   r:255,
                     g:255,
                     b:255};
+
+//inicializacion de lista de poligonos y del poligono inicial
 let poligonos = new Array();
-let poligonoSeleccionado = new Poligono(radioCirculo, radioCentro, colorCirculo, colorCentro, colorLinea);
-poligonos.push({    poligono: poligonoSeleccionado,
+let poligonoAbierto = new Poligono(radioCirculo, radioCentro, colorCirculo, colorCentro, colorLinea);
+let poligonoSeleccionado = poligonoAbierto;
+poligonos.push({    poligono: poligonoAbierto,
                     estaTerminado: false   
 });
 
 
 //eventos
+//click
+let selectedPunto = null;
 document.querySelector("#js-canvas").addEventListener("click", event=>{
     console.log("Y: " + event.layerY + "; X: " +  event.layerX);
-    if(selectedPunto){
+    if(selectedPunto){//si el click comenzo en un punto de poligono terminado se deselecciona el punto y termina la funcion, sino se crea un nuevo punto para el poligono abierto
         selectedPunto = null;
         return;
     }
-    poligonoSeleccionado.addPunto(event.layerX, event.layerY);
-    poligonoSeleccionado.calcularCentro();
-    lastClick = event;
-    draw(poligonoSeleccionado);
+    poligonoAbierto.addPunto(event.layerX, event.layerY);
+    poligonoAbierto.calcularCentro();
+    poligonoSeleccionado = poligonoAbierto;
+    draw(poligonoAbierto);
 })
-//arrastre
-let selectedPunto = null;
-let isMouseClicked = false;
+
+//click and drag
+let isMouseButtonDown = false;
 document.querySelector("#js-canvas").addEventListener("mousedown", event=>{
     for(let xi = 0; xi < poligonos.length; xi++){
         if(poligonos[xi].estaTerminado){
             let punto = poligonos[xi].poligono.getPunto(event.layerX, event.layerY);
-            if(punto != null){
+            if(punto != null){//si el click izquierdo se hiso sobre el punto de algun poligono terminado
+                poligonoSeleccionado = poligonos[xi].poligono;
                 selectedPunto = punto;
             }
         }
     }
-    isMouseClicked = event.button == 0;
+    isMouseButtonDown = event.button == 0;
 })
 
 document.querySelector("#js-canvas").addEventListener("mouseup", event=>{
     if(event.button == 0){
-        isMouseClicked = false;
+        isMouseButtonDown = false;
     }
 })
 
-
-//click and drag
 document.querySelector("#js-canvas").addEventListener("mousemove", event=>{
-    if(isMouseClicked && selectedPunto != null){
+    if(isMouseButtonDown && selectedPunto != null){
         //accion de drageo
         selectedPunto.move(event.movementY, event.movementX, true);
         limpiar(width, height, colorFondo);
@@ -238,19 +263,42 @@ document.querySelector("#js-canvas").addEventListener("mousemove", event=>{
     }
 })
 
+//doble click
 document.addEventListener("dblclick", event=>{
+    //si se hace doble click recorre los poligonos terminados y les pregunta si se puede borrar las coordenadas, si el poligono responde que borro algo la funcion refresca el canvas y regresa
     for(let xi = 0; xi < poligonos.length; xi++){
         if(poligonos[xi].estaTerminado){
             let response = poligonos[xi].poligono.deletePunto(event.layerX, event.layerY);
-            if(response == 2){
-                poligonos.splice(xi, 1);
+            if(response != 0){
+                if(response == 2){
+                    poligonos.splice(xi, 1);
+                }
+                refresh();
+                return;
             }
-            refresh();
         }
     }
 })
 
+//cambio saturacion
+let isCPressed = false;
+document.addEventListener("keydown", event=>{
+    isCPressed = event.code == "KeyC";
+})
+document.addEventListener("keyup", event=>{
+    if(event.code == "KeyC"){
+        isCPressed = false;
+    }
+})
+document.addEventListener("wheel", event=>{
+    if(isCPressed){//cuando gira la rueda en el caso de que la tecla c este siendo apretada le pide al poligono cambiar su saturacion, y refresca el canvas
+        poligonoSeleccionado.changeSaturacion(event.deltaY);
+        refresh();
+    }
+})
+
 function refresh(){
+    //limpia el canvas y redibuja los poligonos
     limpiar(width, height, colorFondo);
     poligonos.forEach(poligono=>{
         draw(poligono.poligono, poligono.estaTerminado);
@@ -258,35 +306,37 @@ function refresh(){
 }
 
 function draw(poligono, estaTerminado){
+    //dibuja un poligono recibido
+    //le pregunta los colores a el poligono
     let colorPunto = poligono.getColorPuntos();
     let colorLinea = poligono.getColorLinea();
     context.lineCap = 'butt';
+    //setea los colores
     context.fillStyle = "rgb(" + colorPunto.r + ", " + colorPunto.g + ", " + colorPunto.b + ")";
     context.strokeStyle = "rgb(" + colorLinea.r + ", " + colorLinea.g + ", " + colorLinea.b + ")";
-
     let puntoAnterior = null;
     let puntoInicial = null;
     let puntos = poligono.getAllPuntos();
+
     for(xi = 0; xi < puntos.length; xi++){
         let punto = puntos[xi];
-
         if(xi == 0){
             puntoInicial = punto;
         }
 
         drawCircle(punto, poligono.getRadioPuntos());
 
+        //si no el el primer punto une este con el anterior con una linea
         if(puntoAnterior){
             drawLine(puntoAnterior, punto);
         }
 
-        if(xi == puntos.length - 1 && estaTerminado){
-            drawLine(punto, puntoInicial);
-            colorCentro = poligono.getColorCentro();
+        if(xi == puntos.length - 1 && estaTerminado){//si es el ultimo punto y el poligono esta completo
+            drawLine(punto, puntoInicial);//une el primer punto con el ultimo
+            colorCentro = poligono.getColorCentro();//consigue el color del punto central
             context.fillStyle = "rgb(" + colorCentro.r + ", " + colorCentro.g + ", " + colorCentro.b + ")";
-            drawCircle(poligono.getPuntoCentro(), poligono.getRadioCentro());
+            drawCircle(poligono.getPuntoCentro(), poligono.getRadioCentro());//dibuja el punto del centro
         }
-
         puntoAnterior = punto;
     }
 
@@ -305,7 +355,7 @@ function draw(poligono, estaTerminado){
         context.closePath();
     }
 }
-
+//funcion que limpia el canvas con blanco
 function limpiar(ancho, alto, colorFondo){
     context.beginPath();
     context.fillStyle = "rgb(" + colorFondo.r + ", " + colorFondo.g + ", " + colorFondo.b + ")";
@@ -314,34 +364,18 @@ function limpiar(ancho, alto, colorFondo){
     context.closePath();
 }
 
+//terminar un poligono
 document.querySelector("#js-terminarPoligono").addEventListener("click", ()=>{
-    if(poligonoSeleccionado.isEmpty()){
+    if(poligonoAbierto.isEmpty()){
         alert("tenes que crear almenos un punto");
         return;
     }
-    draw(poligonoSeleccionado, true);
-    poligonoSeleccionado = new Poligono(radioCirculo, radioCentro, colorCirculo, colorCentro, colorLinea);
+    draw(poligonoAbierto, true);
+    poligonoAbierto = new Poligono(radioCirculo, radioCentro, colorCirculo, colorCentro, colorLinea);
+    poligonoSeleccionado = poligonoAbierto;
     poligonos[poligonos.length-1].estaTerminado = true;
-    poligonos.push({    poligono: poligonoSeleccionado,
+    poligonos.push({    poligono: poligonoAbierto,
                         estaTerminado: false   
     });
 })
 
-
-/*function draw(poligono){
-    arco(poligono.getAllPuntos()[0].getX(), poligono.getAllPuntos()[0].getY(), poligono.getRadioPuntos(), 0, 2, poligono.getColorPuntos());
-}
-
-function arco(x, y, radio, inicio, fin, colorCirculo){
-    context.beginPath();
-    console.log("dibujo circulo");
-    console.log(x);
-    console.log(y);
-    console.log(colorCirculo);
-    console.log(radio);
-    context.arc(x, y, radio, Math.PI*inicio, Math.PI*fin);
-    context.lineCap = 'butt';
-    context.fillStyle = "rgb(" + colorCirculo.r + ", " + colorCirculo.g + ", " + colorCirculo.b + ")";
-    context.fill();
-    context.closePath();
-}*/
