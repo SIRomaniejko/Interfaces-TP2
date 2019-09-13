@@ -148,6 +148,7 @@ class Poligono{
         return this.getColorSaturado(this.colorPunto);
     }
     getColorCentro(){
+        console.log(this.colorCentro);
         return this.getColorSaturado(this.colorCentro);
     }
     getColorLinea(){
@@ -333,7 +334,7 @@ function draw(poligono, estaTerminado){
 
         if(xi == puntos.length - 1 && estaTerminado){//si es el ultimo punto y el poligono esta completo
             drawLine(punto, puntoInicial);//une el primer punto con el ultimo
-            colorCentro = poligono.getColorCentro();//consigue el color del punto central
+            let colorCentro = poligono.getColorCentro();//consigue el color del punto central
             context.fillStyle = "rgb(" + colorCentro.r + ", " + colorCentro.g + ", " + colorCentro.b + ")";
             drawCircle(poligono.getPuntoCentro(), poligono.getRadioCentro());//dibuja el punto del centro
         }
