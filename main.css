@@ -76,6 +76,11 @@ h4{
     margin: 0 auto;
 }
 
+.help *{
+    list-style-position: inside;
+    text-align: center;
+}
+
 @media only screen and (max-width:480px){
     .flexbox{
         flex-direction: column;

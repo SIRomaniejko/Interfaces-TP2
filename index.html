@@ -10,7 +10,103 @@
 <body>
     <nav id="navbar">
         <button id="js-terminarPoligono">Terminar poligono</button>
+        <button id="js-modificarPoligonos">Modificar atributos</button>
+        <button id="js-help">help</button>
     </nav>
+    <div id="js-selectorAtributos" class="hidden ejercicio">
+        <form>
+            <div>
+                <h4>color punto</h4>
+                <div class="flexbox js-color" elementoPerteneciente="vertice">
+                    <div class="slidecontainer">
+                        <label for="r">Red</label>
+                        <input type="range" min="0" max="255" value="255" class="slider" name="r">
+                        <input type="number" min="0" max="255" value="255" class="js-valueBox">
+                    </div>
+                    <div class="slidecontainer">
+                        <label for="g">Green</label>
+                        <input type="range" min="0" max="255" value="0" class="slider" name="g">
+                        <input type="number" min="0" max="255" value="0" class="js-valueBox">
+                    </div>
+                    <div class="slidecontainer">
+                        <label for="b">Blue</label>
+                        <input type="range" min="0" max="255" value="0" class="slider" name="b">
+                        <input type="number" min="0" max="255" value="0" class="js-valueBox">
+                    </div>
+                </div>
+            </div>
+            <div>
+                <h4>color punto central</h4>
+                <div class="flexbox js-color" elementoPerteneciente="central">
+                    <div class="slidecontainer">
+                        <label for="r">Red</label>
+                        <input type="range" min="0" max="255" value="0" class="slider" name="r">
+                        <input type="number" min="0" max="255" value="0" class="js-valueBox">
+                    </div>
+                    <div class="slidecontainer">
+                        <label for="g">Green</label>
+                        <input type="range" min="0" max="255" value="255" class="slider" name="g">
+                        <input type="number" min="0" max="255" value="255" class="js-valueBox">
+                    </div>
+                    <div class="slidecontainer">
+                        <label for="b">Blue</label>
+                        <input type="range" min="0" max="255" value="0" class="slider" name="b">
+                        <input type="number" min="0" max="255" value="0" class="js-valueBox">
+                    </div>
+                </div>
+            </div>
+            <div>
+                <h4>color linea</h4>
+                <div class="flexbox js-color" elementoPerteneciente="linea">
+                    <div class="slidecontainer">
+                        <label for="r">Red</label>
+                        <input type="range" min="0" max="255" value="255" class="slider" name="r">
+                        <input type="number" min="0" max="255" value="255" class="js-valueBox">
+                    </div>
+                    <div class="slidecontainer">
+                        <label for="g">Green</label>
+                        <input type="range" min="0" max="255" value="255" class="slider" name="g">
+                        <input type="number" min="0" max="255" value="255" class="js-valueBox">
+                    </div>
+                    <div class="slidecontainer">
+                        <label for="b">Blue</label>
+                        <input type="range" min="0" max="255" value="0" class="slider" name="b">
+                        <input type="number" min="0" max="255" value="0" class="js-valueBox">
+                    </div>
+                </div>
+            </div>
+            <div class="flexbox js-coords">
+                <div>
+                    <label for="inicio">radio punto</label>
+                    <input class="js-radio-punto" type="number" name="inicio" value="10" min="0">
+                </div>
+                <div>
+                    <label for="fin">radio centro</label>
+                    <input class="js-radio-centro" type="number" name="fin" value="7" min="0">
+                </div>
+            </div>
+            <div class="flexbox js-auto">
+                <button type="button" id="js-Auto">default</button>
+                <button type="button" id="js-aplicarSeleccionado">aplicar a poligono seleccionado</button>
+            </div>
+        </form>
+    </div>
+    <div id="js-ayudador" class="hidden ejercicio help">
+        <h4>un poligono esta seleccionado cuando:</h4>
+        <ul>
+            <li>es el poligono que se esta construyendo</li>
+            <li>es el ultimo poligono con el que se interactuo, por ejemplo: borrar un punto, estirar un vertice, moverlo completamente</li>
+            <li>cuando se termina un poligono se comienza la edicion de uno nuevo y este pasa a ser seleccionado</li>
+        </ul>
+        <h4>los atributos especiales se aplican a:</h4>
+        <ul>
+            <li>el proximo poligono que se cree cuando se termine el poligono actual</li>
+            <li>el poligono seleccionado cuando se aprieta el boton "aplicar a poligono seleccionado"</li>
+        </ul>
+        <h4>el cambio en la saturacion solo se aplica a el poligono seleccionado</h4>
+        <p>por lo tanto cuando se termina un poligono y se modifica la saturacion, se modifica la saturacion del nuevo poligono que puede no tener un punto y por lo tanto no ser visible</p>
+        <h4>para borrar o editar las posiciones de los puntos de un poligono, este primero tiene que estar terminado</h4>
+    </div>
     <div class="container">
         <canvas width="700px" height="400px" id="js-canvas">
 

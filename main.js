@@ -82,11 +82,12 @@ class Poligono{
 
     getPunto(x, y){
         //pregunta si x;y esta dentro de algun punto, si es asi lo devuelve
-        if(this.esDentroPunto(this.puntoCentral, x, y)){
+        if(this.esDentroPunto(this.puntoCentral, x, y, true)){
+            
             return this.puntoCentral;
         }
         for(let xi = 0; xi < this.puntos.length; xi++){
-            if(this.esDentroPunto(this.puntos[xi], x, y)){
+            if(this.esDentroPunto(this.puntos[xi], x, y, false)){
                 return this.puntos[xi];
             }
         }
@@ -94,11 +95,11 @@ class Poligono{
     }
 
     deletePunto(x, y){
-        if(this.esDentroPunto(this.puntoCentral, x, y)){
+        if(this.esDentroPunto(this.puntoCentral, x, y, true)){
             return 2;
         }
         for(let xi = 0; xi < this.puntos.length; xi++){
-            if(this.esDentroPunto(this.puntos[xi], x, y)){
+            if(this.esDentroPunto(this.puntos[xi], x, y, false)){
                 if(this.puntos.length == 1){
                     return 2;
                 }
@@ -113,12 +114,22 @@ class Poligono{
         return 0;
     }
 
-    esDentroPunto(punto, x, y){
+    esDentroPunto(punto, x, y, esCentro = false){
         //funcion para saber si un x;y se encuentra en el area de un punto
-        let calculoX = Math.pow((x - punto.getX()), 2);
-        let calculoY = Math.pow((y - punto.getY()), 2);
-        let distanciaCalculo = Math.cbrt(calculoX + calculoY);
-        return distanciaCalculo <= (this.radioPuntos/2);
+        let calculoX = x - punto.getX();
+        let calculoY = y - punto.getY();
+        calculoX = Math.pow(calculoX, 2);
+        calculoY = Math.pow(calculoY, 2);
+        let suma = calculoX + calculoY;
+        let radio = 0;
+        if(esCentro){
+            radio = this.radioCentro;
+        }
+        else{
+            radio = this.radioPuntos;
+        }
+        suma = Math.sqrt(suma) - radio;
+        return suma <= 0;
     }
 
     calcularCentro(){
@@ -148,11 +159,26 @@ class Poligono{
         return this.getColorSaturado(this.colorPunto);
     }
     getColorCentro(){
-        console.log(this.colorCentro);
         return this.getColorSaturado(this.colorCentro);
     }
     getColorLinea(){
         return this.getColorSaturado(this.colorLinea);
+    }
+    //
+    setRadioPuntos(param){
+        this.radioPuntos = param;
+    }
+    setRadioCentro(param){
+        this.radioCentro = param;
+    }
+    setColorPuntos(param){
+        this.colorPunto = param;
+    }
+    setColorCentro(param){
+        this.colorCentro = param;
+    }
+    setColorLinea(param){
+        this.colorLinea = param;
     }
     getColorSaturado(color){
         //calcula el color dependiendo de la saturacion
@@ -161,6 +187,7 @@ class Poligono{
             return color;
         }
         else if(this.saturacion > 0){
+            
             colorSaturado.r = ((this.saturacion * (255 - color.r)) / 100) + color.r;
             colorSaturado.g = ((this.saturacion * (255 - color.g)) / 100) + color.g;
             colorSaturado.b = ((this.saturacion * (255 - color.b)) / 100) + color.b;
@@ -191,7 +218,6 @@ class Poligono{
 // parametros de creacion poligonos
 let radioCirculo = 10;
 let radioCentro = 7;
-
 let colorCirculo ={ r: 255,
                     g: 0,
                     b: 0};
@@ -293,10 +319,11 @@ document.addEventListener("keyup", event=>{
 })
 document.addEventListener("wheel", event=>{
     if(isCPressed){//cuando gira la rueda en el caso de que la tecla c este siendo apretada le pide al poligono cambiar su saturacion, y refresca el canvas
+        event.preventDefault();
         poligonoSeleccionado.changeSaturacion(event.deltaY);
         refresh();
     }
-})
+}, {passive: false})
 
 function refresh(){
     //limpia el canvas y redibuja los poligonos
@@ -380,3 +407,142 @@ document.querySelector("#js-terminarPoligono").addEventListener("click", ()=>{
     });
 })
 
+
+
+//extras
+document.querySelector("#js-modificarPoligonos").addEventListener("click", ()=>{
+    document.querySelector("#js-selectorAtributos").classList.toggle("hidden");
+})
+
+document.querySelectorAll(".js-color").forEach(selectorColores =>{
+    let color = selectorColores.querySelectorAll(".slider");
+    let mostrador = selectorColores.querySelectorAll(".js-valueBox");
+    for(let y = 0; y < color.length; y++){
+        color[y].addEventListener("input", ()=>{
+            mostrador[y].value = Math.floor(color[y].value);
+            replaceValorVariables()
+        })
+        mostrador[y].addEventListener("change", ()=>{
+            color[y].value = mostrador[y].value;
+            replaceValorVariables()
+        })
+    }
+})
+
+document.querySelector(".js-coords").querySelectorAll("input").forEach(tamanioSelector=>{
+    tamanioSelector.addEventListener("input", replaceValorVariables);
+})
+
+function replaceValorVariables(){
+    radioCirculo = document.querySelector(".js-radio-punto").value;
+    radioCentro = document.querySelector(".js-radio-centro").value;
+    document.querySelectorAll(".js-color").forEach(selectorColor=>{
+        let colorNuevo = {};
+        selectorColor.querySelectorAll(".slider").forEach(slider=>{
+            switch(slider.getAttribute("name")){
+                case "r":
+                    colorNuevo.r =  Math.floor(slider.value);
+                    break;
+                case "g":
+                    colorNuevo.g = Math.floor(slider.value);
+                    break;
+                case "b":
+                    colorNuevo.b = Math.floor(slider.value);
+            }
+        });
+        switch(selectorColor.getAttribute("elementoPerteneciente")){
+            case "central":
+                colorCentro = colorNuevo;
+                break;
+            case "vertice":
+                colorCirculo = colorNuevo;
+                break;
+            case "linea":
+                colorLinea = colorNuevo;
+        }
+    })
+}
+
+document.querySelector("#js-aplicarSeleccionado").addEventListener("click", ()=>{
+    poligonoSeleccionado.setRadioPuntos(radioCirculo);
+    poligonoSeleccionado.setRadioCentro(radioCentro);
+    poligonoSeleccionado.setColorPuntos(colorCirculo);
+    poligonoSeleccionado.setColorCentro(colorCentro);
+    poligonoSeleccionado.setColorLinea(colorLinea);
+    refresh();
+})
+
+let defRadioCirculo = radioCirculo;
+let defRadioCentro = radioCentro;
+let defColorCirculo = { r: colorCirculo.r,
+                        g: colorCirculo.g,
+                        b: colorCirculo.b
+}
+let defColorCentro = {  r: colorCentro.r,
+                        g: colorCentro.g,
+                        b: colorCentro.b
+}
+let defColorLinea = {   r: colorLinea.r,
+                        g: colorLinea.g,
+                        b: colorLinea.b
+}
+document.querySelector("#js-Auto").addEventListener("click", ()=>{
+    document.querySelectorAll(".js-color").forEach(selectorColor=>{
+        let colorSeleccionado;
+        switch(selectorColor.getAttribute("elementoPerteneciente")){
+            case "central":
+                colorSeleccionado = defColorCentro;
+                break;
+            case "vertice":
+                colorSeleccionado = defColorCirculo;
+                break;
+            case "linea":
+                colorSeleccionado = defColorLinea;
+        }
+        selectorColor.querySelectorAll(".slidecontainer").forEach(container=>{
+            let tipoSlide = container.querySelector(".slider").getAttribute("name");
+            container.querySelectorAll("input").forEach(entrada=>{
+                switch(tipoSlide){
+                    case "r":
+                        entrada.value = colorSeleccionado.r;
+                        break;
+                    case "g":
+                        entrada.value = colorSeleccionado.g;
+                        break;
+                    case "b":
+                        entrada.value = colorSeleccionado.b;
+                }
+            })
+        })
+    })
+    document.querySelector(".js-radio-punto").value = defRadioCirculo;
+    document.querySelector(".js-radio-centro").value = defRadioCentro;
+    replaceValorVariables();
+})
+
+document.querySelector("#js-help").addEventListener("click", ()=>{
+    document.querySelector("#js-ayudador").classList.toggle("hidden");
+})
+
+/*selectorColor.querySelectorAll(".slider").forEach(slider=>{
+    switch(slider.getAttribute("name")){
+        case "r":
+            colorNuevo.r =  Math.floor(slider.value);
+            break;
+        case "g":
+            colorNuevo.g = Math.floor(slider.value);
+            break;
+        case "b":
+            colorNuevo.b = Math.floor(slider.value);
+    }
+});
+switch(selectorColor.getAttribute("elementoPerteneciente")){
+    case "central":
+        colorCentro = colorNuevo;
+        break;
+    case "vertice":
+        colorCirculo = colorNuevo;
+        break;
+    case "linea":
+        colorLinea = colorNuevo;
+}*/
