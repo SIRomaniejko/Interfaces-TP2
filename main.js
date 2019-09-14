@@ -414,6 +414,7 @@ document.querySelector("#js-modificarPoligonos").addEventListener("click", ()=>{
     document.querySelector("#js-selectorAtributos").classList.toggle("hidden");
 })
 
+//cada vez que se modifica algun input llama a la funcion replaceValorVariables
 document.querySelectorAll(".js-color").forEach(selectorColores =>{
     let color = selectorColores.querySelectorAll(".slider");
     let mostrador = selectorColores.querySelectorAll(".js-valueBox");
@@ -428,11 +429,11 @@ document.querySelectorAll(".js-color").forEach(selectorColores =>{
         })
     }
 })
-
 document.querySelector(".js-coords").querySelectorAll("input").forEach(tamanioSelector=>{
     tamanioSelector.addEventListener("input", replaceValorVariables);
 })
 
+//esta funcion se encarga que todos los valores de input se extraigan y reemplazen los valores de inicializacion de los polinomios
 function replaceValorVariables(){
     radioCirculo = document.querySelector(".js-radio-punto").value;
     radioCentro = document.querySelector(".js-radio-centro").value;
@@ -463,6 +464,7 @@ function replaceValorVariables(){
     })
 }
 
+//aplica los colores actuales a el poligono seleccionado
 document.querySelector("#js-aplicarSeleccionado").addEventListener("click", ()=>{
     poligonoSeleccionado.setRadioPuntos(radioCirculo);
     poligonoSeleccionado.setRadioCentro(radioCentro);
@@ -472,6 +474,7 @@ document.querySelector("#js-aplicarSeleccionado").addEventListener("click", ()=>
     refresh();
 })
 
+//valores  usados para el boton default
 let defRadioCirculo = radioCirculo;
 let defRadioCentro = radioCentro;
 let defColorCirculo = { r: colorCirculo.r,
